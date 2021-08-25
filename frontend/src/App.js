@@ -35,7 +35,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Random number from backend: {randNum}
+          Random number from BACKEND: {randNum}
         </p>
       </header>
     </div>
