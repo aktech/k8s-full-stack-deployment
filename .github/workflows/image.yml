@@ -1,0 +1,30 @@
+name: Build and Push Image
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - backend
+          - frontend
+    steps:
+      - uses: actions/checkout@v2
+      - name: GitHub Action for DigitalOcean - doctl
+        uses: digitalocean/action-doctl@v2.1.0
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Docker Login
+        run: |
+          doctl registry login
+
+      - name: Build and Push Image to DigitalOcean Registry
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          bash docker/build_and_push.sh ${{ matrix.service }}

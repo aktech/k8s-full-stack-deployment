@@ -1,0 +1,9 @@
+containerRepository: <placeholder>
+imageTag: <placeholder>
+flaskSecretKey: <placeholder>
+flaskAppPort: <placeholder>
+debug: <placeholder>
+dnsName: <placeholder>
+letsEncryptServer: <placeholder>
+letsEncryptEmail: <placeholder>
+namespace: <placeholder>

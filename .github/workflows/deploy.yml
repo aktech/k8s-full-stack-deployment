@@ -1,0 +1,40 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+env:
+  BACKEND_CONTAINER_REPOSITORY: registry.digitalocean.com/aklabs-sandbox/k8s_demo_backend
+  FRONTEND_CONTAINER_REPOSITORY: registry.digitalocean.com/aklabs-sandbox/k8s_demo_frontend
+  ENVIRONMENT: production
+  FLASK_SECRET_KEY: something-random
+  FLASK_APP_PORT: 8080
+  DEBUG: 0
+  DNS_NAME: k1.iamit.in
+  LETS_ENCRYPT_SERVER: https://acme-v02.api.letsencrypt.org/directory
+  LETS_ENCRYPT_EMAIL: hello@aktechlabs.com
+  NAMESPACE: default
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create Environment variables file
+        run: |
+          envsubst < .env.tpl > .env.prod
+
+      - name: GitHub Action for DigitalOcean - doctl
+        uses: digitalocean/action-doctl@v2.1.0
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Add Kubernetes context
+        run: |
+          doctl kubernetes cluster kubeconfig save 804de891-2875-46f3-920c-a9b793d0bb99
+
+      - name: Deploy to DigitalOcean K8s cluster
+        run: |
+          ./charts/install_helm_charts.sh install

@@ -1,0 +1,5 @@
+containerRepository: <placeholder>
+imageTag: <placeholder>
+namespace: placeholder
+targetPort: 3000
+nodeEnv: production

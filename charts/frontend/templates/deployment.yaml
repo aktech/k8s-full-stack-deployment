@@ -1,0 +1,41 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.containerRepository }}:{{ .Values.imageTag }}"
+          env:
+          - name: NODE_ENV
+            value: production
+          - name: ENVIRONMENT
+            value: production
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+  namespace: default
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  ports:
+    - port: 80
+      targetPort: {{ .Values.targetPort }}
+  selector:
+    app: {{ .Release.Name }}

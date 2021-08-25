@@ -1,0 +1,86 @@
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: {{ .Release.Name }}
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.containerRepository }}:{{ .Values.imageTag }}"
+          env:
+            - name: FLASK_APP
+              value: manage.py
+            - name: FLASK_APP_PORT
+              value: "{{ .Values.flaskAppPort }}"
+            - name: FLASK_SECRET_KEY
+              value: {{ .Values.flaskSecretKey }}
+            - name: ENVIRONMENT
+              value: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+  namespace: default
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: {{ .Release.Name }}
+
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: k8s-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - hosts:
+      - {{ .Values.dnsName }}
+    secretName: k8s-tls
+  rules:
+    - host: {{ .Values.dnsName }}
+      http:
+        paths:
+          - path: /api
+            backend:
+              serviceName: backend-service
+              servicePort: 80
+          - path: /
+            backend:
+              serviceName: frontend-service
+              servicePort: 80
+
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: {{ .Values.letsEncryptServer }}
+    email: {{ .Values.letsEncryptEmail }}
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
